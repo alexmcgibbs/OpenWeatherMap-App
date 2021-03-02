@@ -6,7 +6,7 @@ const api = axios.create({
 
 export const listCountries = () => api.get('/listCountries')
 export const listCities = country => api.post('/listCities', country)
-export const queryCity = city => api.post('/city', city)
+export const queryCity = city => api.post('/queryCity', city)
 
 
 const apis = {

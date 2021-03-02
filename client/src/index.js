@@ -6,7 +6,15 @@ import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App 
+    countriesLoading={true}
+    citiesLoading={true}
+    // countries={undefined}
+    selectedCountry="US" 
+    // cities= {undefined}
+    selectedCity="Seattle"
+    test={false}
+    />
   </React.StrictMode>,
   document.getElementById('root')
 );

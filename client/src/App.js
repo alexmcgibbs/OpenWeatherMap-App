@@ -10,14 +10,14 @@ import ButtonAppBar from './ButtonAppBar.js'
 import SimpleCard from './SimpleCard.js'
 
 
-function App() {
-  const [countriesLoading, setCountriesLoading] = useState(true)
-  const [citiesLoading, setCitiesLoading] = useState(true)
+function App(props) {
+  const [countriesLoading, setCountriesLoading] = useState(props.countriesLoading)
+  const [citiesLoading, setCitiesLoading] = useState(props.citiesLoading)
 
-  const [countries, setCountries] = useState()
-  const [selectedCountry, setSelectedCountry] = useState("US")
-  const [cities, setCities] = useState()
-  const [selectedCity, setSelectedCity] = useState()
+  const [countries, setCountries] = useState(props.countries)
+  const [selectedCountry, setSelectedCountry] = useState(props.selectedCountry)
+  const [cities, setCities] = useState(props.cities)
+  const [selectedCity, setSelectedCity] = useState(props.selectedCity)
 
   const [wind, setWind] = useState()
   const [main, setMain] = useState()
@@ -29,22 +29,70 @@ function App() {
   const [feels, setFeels] = useState()
   const [pressure, setPressure] = useState()
 
+  function listCountries() {
+      setCountriesLoading(true)
+      api.listCountries().then((res) => {
+        console.log("res", res?.data?.data)
+        setCountries(res?.data?.data)
+        setCountriesLoading(false)
+      })
+  }
+
+  function listCities(country) {
+      if (country) {
+        var countryParam = country
+      } else {
+        var countryParam = selectedCountry
+      }
+
+      setCitiesLoading(true)
+      api.listCities({"country": countryParam }).then((res) => {
+        console.log("res", res?.data?.data)
+        setCities(res?.data?.data)
+        setCitiesLoading(false)
+      })
+  }
+
+  function queryCity(city) {
+      if (city) {
+        var cityParam = city
+      } else {
+        var cityParam = selectedCity
+      }
+
+      api.queryCity({"city": cityParam}).then((res) => {
+        console.log("res", res.data.data)
+        var json = res.data.data
+        setMain(json?.weather?.[0]?.description)
+        setTemp(json?.main?.temp)
+        setMinTemp(json?.main?.temp_min)
+        setMaxTemp(json?.main?.temp_max)
+        setFeels(json?.main?.feels_like)
+        setHumidity(json?.main?.humidity)
+        setVisibility(json?.visibility)
+        setWind(json?.wind?.speed)
+        setPressure(json?.main?.pressure)
+    })
+  }
+
+  const handleCountryChange = (e,v) => {
+    setSelectedCountry(v)
+    if (!v) { return setSelectedCity('') }
+    console.log(v)
+    listCities(v)
+  }
+
+  const handleCityChange = (e,v) => {
+    setSelectedCity(v)
+    if (!v) { return }
+    console.log(v)
+    queryCity(v)
+  }
 
   useEffect(() => {
-
-    setCountriesLoading(true)
-    api.listCountries().then((res) => {
-      console.log("res", res.data.data)
-      setCountries(res.data.data)
-      setCountriesLoading(false)
-    })
-
-    setCitiesLoading(true)
-    api.listCities({"country":selectedCountry}).then((res) => {
-      console.log("res", res.data.data)
-      setCities(res.data.data)
-      setCitiesLoading(false)
-    })
+      listCountries()
+      listCities()
+      if (selectedCity) {queryCity()}
   }, [])
 
   return (
@@ -52,23 +100,13 @@ function App() {
       <ButtonAppBar/>
       <header className="App-header">
         <div style={{display:"flex", marginTop:"3%"}}>
-
           <Autocomplete
             id="weather-autocomplete-country"
-            defaultValue="US"
-            onChange={(e,v) => {
-              setSelectedCountry(v)
-              if (!v) { return}
-              setCountriesLoading(true)
-              console.log(v)
-              api.listCities({"country": v}).then((res) => {
-                console.log("res", res.data.data)
-                setCities(res.data.data)
-                setCountriesLoading(false)
-              })
-            }}
+            value={selectedCountry}
+            onChange={handleCountryChange}
+            onInputChange={props.test ? handleCountryChange : undefined}
             disabled={countriesLoading}
-            options={countriesLoading ? [{ name: "loading..."}] : countries }
+            options={countriesLoading ? ["loading..."] : countries }
             style={{ width: 100 }}
             renderInput={(params) => 
               <TextField {...params}
@@ -78,29 +116,11 @@ function App() {
           />
           <Autocomplete
             id="weather-autocomplete-city"
-            onChange={(e,v) => {
-              setSelectedCity(v)
-              if (!v) { return }
-              setCitiesLoading(true)
-              console.log(v)
-              api.queryCity({"city": v}).then((res) => {
-                console.log("res", res.data.data)
-                var json = res.data.data
-                setSelectedCity(v)
-                setMain(json?.weather?.[0]?.description)
-                setTemp(json?.main?.temp)
-                setMinTemp(json?.main?.temp_min)
-                setMaxTemp(json?.main?.temp_max)
-                setFeels(json?.main?.feels_like)
-                setHumidity(json?.main?.humidity)
-                setVisibility(json?.visibility)
-                setWind(json?.wind?.speed)
-                setPressure(json?.main?.pressure)
-                setCitiesLoading(false)
-              })
-            }}
+            value={selectedCity}
+            onChange={handleCityChange}
+            onInputChange={props.test ? handleCityChange : undefined}
             disabled={citiesLoading || !selectedCountry}
-            options={citiesLoading ? [{ name: "loading..."}] : cities}
+            options={citiesLoading ? ["loading..."] : cities}
             ListboxComponent={ListboxComponent}
             style={{ width: 300 }}
             renderInput={(params) => 
@@ -109,29 +129,29 @@ function App() {
                 variant="outlined" />
             }
           />
-          </div>
-          {selectedCity &&
-            <>
-              <div style={{display:"flex", marginTop:"3%"}}>
-                <div style={{marginLeft: "1%", marginRight: "1%",}}> 
-                  <SimpleCard
-                  text1={"humidity: " + humidity +"%"}
-                  text2={temp + "°F"}
-                  text3={"feels like: " + feels +"°F"}
-                  text4={"min: " + minTemp + "°F max: " + maxTemp +"°F"}
-                  />
-                </div>
-                <div style={{marginLeft: "1%", marginRight: "1%",}}> 
-                  <SimpleCard
-                  text1={"visibility: " + visibility +"m"}
-                  text2={main}
-                  text3={"wind: " + wind + "mph"}
-                  text4={"pressure: " + pressure+"hPa"}
-                  />
-                </div>
+        </div>
+        {selectedCity && temp && main &&
+          <>
+            <div id="cards" style={{display:"flex", marginTop:"3%"}}>
+              <div style={{marginLeft: "1%", marginRight: "1%",}}> 
+                <SimpleCard
+                text1={"humidity: " + humidity +"%"}
+                text2={temp + "°F"}
+                text3={"feels like: " + feels +"°F"}
+                text4={"min: " + minTemp + "°F max: " + maxTemp +"°F"}
+                />
               </div>
-            </>
-          }
+              <div style={{marginLeft: "1%", marginRight: "1%",}}> 
+                <SimpleCard
+                text1={"visibility: " + visibility +"m"}
+                text2={main}
+                text3={"wind: " + wind + "mph"}
+                text4={"pressure: " + pressure+"hPa"}
+                />
+              </div>
+            </div>
+          </>
+        }
       </header>
     </div>
   );

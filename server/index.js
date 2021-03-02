@@ -3,11 +3,11 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const https = require('https');
 
-
 const db = require('./db')
 
 const app = express()
 const apiPort = 8000
+
 
 const City = require('./models/city')
 const apiKey = require('./apiKey.json')
@@ -43,13 +43,14 @@ app.post('/api/listCities', (req, res) => {
                 err,
                 message: 'City not found!',
             })
-        }
+        }    
         console.log(data)
 		return res.status(200).json({ data })
 	})
 })
 
-app.post('/api/city', (request, res) => {
+app.post('/api/queryCity', (request, res) => {
+	console.log(request.body.city)
 	var url = "https://api.openweathermap.org/data/2.5/weather?q=" + request.body.city + "&appid=" + appID + "&units=imperial"
 	https.get(url, (resp) => {
 		let data = ''
@@ -77,4 +78,6 @@ app.post('/api/city', (request, res) => {
 		})
 })
 
-app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`))
+const server = app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`))
+
+module.exports = server
