@@ -2,7 +2,7 @@
 
 ## Client:
 
-`yarn start` in client to run
+`yarn start` in client to run and view on http://localhost:3000/
 
 `yarn test` in client to test
 
@@ -12,7 +12,7 @@
 
 `mocha tests.js` in server to test
 
-##Mongo
+## Mongo
 
 `mongod --dbpath data/db` in server to run
 
