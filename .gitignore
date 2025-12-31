@@ -16,5 +16,12 @@ coverage
 # Benchmarking
 benchmarks/graphs
 
+/client/node_modules
+/server/node_modules
+/client/yarn.lock
+/server/yarn.lock
+*/package-lock.json
+
 # ignore additional files using core.excludesFile
 # https://git-scm.com/docs/gitignore
+/server/node_modules
